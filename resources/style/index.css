@@ -1,0 +1,5 @@
+.progress {
+  background-color: #aaa;
+  -webkit-box-shadow: 4px 4px 4px 4px #000; 
+  /*box-shadow: none; */
+  }
