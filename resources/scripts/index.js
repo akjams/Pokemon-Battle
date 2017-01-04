@@ -4,8 +4,10 @@ window.onload = function() {
 	var player2Div = "player2";
 	var player1ArraySlot = 0;
 	var player2ArraySlot = 1;
-	var MAX_MOVES = 1;
+	var MAX_MOVES = 3;
 	var TIME_BEFORE_OPPONENT_MOVES = 2000;
+	var ENDGAME_TRANSITION_TIME = 10000;
+	var HEALTH_MAGNIFIER = 4;
 
 	var battle = {
 		pokemon: [],
@@ -23,6 +25,9 @@ window.onload = function() {
 			setMessage(moveString);
 			this.pokemon[1].loseHp(move.damage);
 			drawHp(this.pokemon[1], this.pokemon[1].divId);
+			if (this.pokemon[1].isDead()) {
+				endgame();
+			}
 		},
 		player2Attack: function() {
 			var move = getPlayer2Attack(this.pokemon[1]);
@@ -30,6 +35,43 @@ window.onload = function() {
 			setMessage(moveString);
 			this.pokemon[0].loseHp(move.damage);
 			drawHp(this.pokemon[0], this.pokemon[0].divId);
+			if (this.pokemon[0].isDead()) {
+				endgame();
+			}
+		}
+	};
+
+	var radio = {
+		intro: null,
+		battle: null,
+		victory: null,
+
+		playMusic: function(music) {
+			if (music) {
+				this.stopAll();
+				music.play();
+			};
+		},
+
+		stopMusic: function(music) {
+			if (music) {
+				music.pause();
+			};
+		},
+
+		stopAll: function() {
+			this.stopMusic(this.intro);
+			this.stopMusic(this.battle);
+			this.stopMusic(this.victory);
+		},
+
+		init: function() {
+			this.intro = new Audio('resources/audio/opening.mp3');
+			this.battle = new Audio('resources/audio/battle.mp3');
+			this.victory = new Audio('resources/audio/victory.mp3');
+			this.intro.loop = true;
+			this.battle.loop = true;
+			this.victory.loop = true;
 		}
 	};
 
@@ -107,7 +149,15 @@ window.onload = function() {
 	}
 
 	function drawHp(pokemon, pokeDivId) {
-		$("#"+pokeDivId).find("#hpDiv").html(pokemon.hp + " / " + pokemon.maxHp);
+		var hpDiv = $("#"+pokeDivId).find("#hpDiv");
+		hpDiv.html(pokemon.hp + " / " + pokemon.maxHp);
+		var hplevel = 100 * pokemon.hp / pokemon.maxHp;
+
+		var progress = $("<div>", {class: "progress"});
+		var progressBar = $("<div>", {class: "progress-bar progress-bar-success progress-bar-striped active", role: "progressbar", 
+			"aria-valuenow": 70, "aria-valuemin": 0, "aria-valuemax": 100, style: "width:" + hplevel + "%"});
+		progress.append(progressBar);
+		hpDiv.append(progress);
 	}
 
 	function drawPlayerOneStuff(pokeDiv) {
@@ -134,7 +184,7 @@ window.onload = function() {
 					}
 
 					var newName = data.name;
-					var newHP = getHpFromStatArray(data.stats); //data.stats[];
+					var newHP = getHpFromStatArray(data.stats) * HEALTH_MAGNIFIER; //data.stats[];
 					var newImage = data.sprites.front_default;
 					var moves = getMovesFromData(data, drawCallback);
 					var newPoke = new Pokemon(newName, newHP, newImage, moves, divId);
@@ -146,9 +196,12 @@ window.onload = function() {
 	}
 
 	function getMovesFromData(data, callback) {
-		var move1 = new Move("Move 1", 100);
-		var move2 = new Move("move 2", 150);
-		var moves = [move1, move2];
+		/*   Testing   */
+		// var move1 = new Move("Move 1", 100);
+		// var move2 = new Move("move 2", 150);
+		// var moves = [move1, move2];
+
+		var moves = [];
 
 		var numberOfMoves = Math.min(MAX_MOVES, data.moves.length);
 
@@ -187,6 +240,7 @@ window.onload = function() {
 		var name = document.getElementById("searchPokemon").value;
 		getPokemon(name, player1Div, player1ArraySlot);
 		getRandomOpponent();
+		startgame();
 	}
 
 	function getRandomOpponent() {
@@ -199,9 +253,12 @@ window.onload = function() {
 		if (battle.isPlayer1Turn()) {
 			battle.switchTurn();
 			battle.player1Attack();
-			setTimeout(opponentAttack, TIME_BEFORE_OPPONENT_MOVES);
+			if (!battle.pokemon[1].isDead()) {
+				setTimeout(opponentAttack, TIME_BEFORE_OPPONENT_MOVES);
+			} 
 		}
 	}
+
 	function opponentAttack() {
 		battle.player2Attack();
 		battle.switchTurn();
@@ -232,22 +289,38 @@ window.onload = function() {
 		$("#message").text(string);
 	}
 
-	function init() {
-
-
-		document.getElementById("submitSearch").addEventListener("click", submitPokemonSearch);
-
-
+	function setDefaultPokemon() {
 		//default testing
-		var defaultMove = new Move("Default", 1);
-		var defaultMoveList = [defaultMove, defaultMove, defaultMove, defaultMove];
-		var poke1 = new Pokemon("Ivy", 100, "resources/images/favicon.ico", defaultMoveList, player1Div);
-		var poke2 = new Pokemon("Bulba", 200, "resources/images/favicon.ico", defaultMoveList, player2Div);
+		var defaultMove = new Move("", 0);
+		var defaultMoveList = [];
+		var poke1 = new Pokemon("", 0, "resources/images/favicon.ico", defaultMoveList, player1Div);
+		var poke2 = new Pokemon("", 0, "resources/images/favicon.ico", defaultMoveList, player2Div);
 		battle.pokemon = [poke1, poke2];
-
 		//delete
 		drawPokemon(poke1, player1Div);
 		drawPokemon(poke2, player2Div);
+	}
+
+	function init() {
+		radio.init();
+		opening();
+		document.getElementById("submitSearch").addEventListener("click", submitPokemonSearch);
+	}
+
+	function opening() {
+		battle.turn = 1;
+		radio.playMusic(radio.intro);
+		setDefaultPokemon();
+	}
+
+	function endgame() {
+		battle.turn = 1;
+		radio.playMusic(radio.victory);
+	}
+
+	function startgame() {
+		battle.turn = 0;
+		radio.playMusic(radio.battle);
 	}
 
 	init();
