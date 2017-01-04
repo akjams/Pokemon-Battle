@@ -5,6 +5,7 @@ window.onload = function() {
 	var player1ArraySlot = 0;
 	var player2ArraySlot = 1;
 	var MAX_MOVES = 1;
+	var TIME_BEFORE_OPPONENT_MOVES = 2000;
 
 	var battle = {
 		pokemon: [],
@@ -17,12 +18,18 @@ window.onload = function() {
 			return this.turn === 0;
 		},
 		player1Attack: function() {
-			pokemon[1].loseHp(getPlayer1Attack());
-			drawHp(pokemon[1], pokemon[1].divId);
+			var move = getPlayer1Attack(this.pokemon[0]);
+			var moveString = "You used " + move.useString();
+			setMessage(moveString);
+			this.pokemon[1].loseHp(move.damage);
+			drawHp(this.pokemon[1], this.pokemon[1].divId);
 		},
 		player2Attack: function() {
-			pokemon[0].loseHp(getPlayer2Attack());
-			drawHp(pokemon[0], pokemon[0].divId);
+			var move = getPlayer2Attack(this.pokemon[1]);
+			var moveString = "Opponent used " + move.useString();
+			setMessage(moveString);
+			this.pokemon[0].loseHp(move.damage);
+			drawHp(this.pokemon[0], this.pokemon[0].divId);
 		}
 	};
 
@@ -53,6 +60,9 @@ window.onload = function() {
 		this.toString = function() {
 			return this.name + "  [damage: " + this.damage + "]";
 		};
+		this.useString = function() {
+			return this.name + " and did " + this.damage + " damage";
+		}
 	}
 
 	function drawPokemonAtIndex(index, divId) {
@@ -77,7 +87,7 @@ window.onload = function() {
 			for (var i = 0; i < pokemon.moves.length; i++) {
 
 				var radioElem = $("<label>", {class: "btn-sm"});
-				var radioInput = $("<input>", { type: "hidden", name: "attackButtons", value: pokemon.moves[i].damage});
+				var radioInput = $("<input>", { type: "hidden", name: "opponentButtons", id: pokemon.moves[i].name, value: pokemon.moves[i].damage});
 
 				$(radioElem).html(pokemon.moves[i].toString());
 
@@ -101,7 +111,8 @@ window.onload = function() {
 	}
 
 	function drawPlayerOneStuff(pokeDiv) {
-		$(pokeDiv).find( "input" ).attr( "type", "radio" );
+		$(pokeDiv).find( "input" ).attr( "type", "radio" ).attr("name", "attackButtons");
+		$(pokeDiv).find( "input" ).first().attr( "checked", "true" );
 		var attackBtn = $("<input>", 
 		{
 			type: "submit", 
@@ -188,19 +199,37 @@ window.onload = function() {
 		if (battle.isPlayer1Turn()) {
 			battle.switchTurn();
 			battle.player1Attack();
-			battle.player2Attack();
-			battle.switchTurn();
+			setTimeout(opponentAttack, TIME_BEFORE_OPPONENT_MOVES);
 		}
 	}
-
-	function getPlayer1Attack() {
-		var attack = $('input[name=attackButtons]:checked').val();
-		console.log(attack);
-		return attack;
+	function opponentAttack() {
+		battle.player2Attack();
+		battle.switchTurn();
 	}
 
-	function getPlayer2Attack() {
-		
+	function getPlayer1Attack(poke1) {
+		 var attackName = $('input[name=attackButtons]:checked').attr("id");
+		 console.log((attackName));
+		 for (var i = 0; i < poke1.moves.length; i++) {
+		 	if (poke1.moves[i].name === attackName) {
+		 		return poke1.moves[i];
+		 	}
+		 }
+		 return new Move("default", 1);
+	}
+
+	function getPlayer2Attack(poke2) {
+		 var randAttackIndex = Math.floor(Math.random() * poke2.moves.length);
+		 return poke2.moves[randAttackIndex];
+		 // var opponentAttacks = $('input[name=opponentButtons]');
+		 // console.log(opponentAttacks);
+		 // var randAttackIndex = Math.floor(Math.random() * opponentAttacks.length);
+		 // return opponentAttacks[randAttackIndex].value;
+	}
+
+	function setMessage(string) {
+		console.log("setting message string");
+		$("#message").text(string);
 	}
 
 	function init() {
@@ -210,10 +239,11 @@ window.onload = function() {
 
 
 		//default testing
-		var defaultMove = new Move("Default", 0);
+		var defaultMove = new Move("Default", 1);
 		var defaultMoveList = [defaultMove, defaultMove, defaultMove, defaultMove];
 		var poke1 = new Pokemon("Ivy", 100, "resources/images/favicon.ico", defaultMoveList, player1Div);
 		var poke2 = new Pokemon("Bulba", 200, "resources/images/favicon.ico", defaultMoveList, player2Div);
+		battle.pokemon = [poke1, poke2];
 
 		//delete
 		drawPokemon(poke1, player1Div);
