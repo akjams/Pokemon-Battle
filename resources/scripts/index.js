@@ -1,5 +1,5 @@
 window.onload = function() {
-	var pokeapi = "http://pokeapi.co/api/v2/";
+	var pokeapi = "//pokeapi.co/api/v2/";
 	var player1Div = "player1";
 	var player2Div = "player2";
 	var player1ArraySlot = 0;
