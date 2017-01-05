@@ -9,6 +9,8 @@ window.onload = function() {
 	var ENDGAME_TRANSITION_TIME = 10000;
 	var HEALTH_MAGNIFIER = 4;
 
+	var pokemonList = ["bulbasaur","ivysaur","venusaur","charmander","charmeleon","charizard","squirtle","wartortle","blastoise","caterpie","metapod","butterfree","weedle","kakuna","beedrill","pidgey","pidgeotto","pidgeot","rattata","raticate","spearow","fearow","ekans","arbok","pikachu","raichu","sandshrew","sandslash","nidoran-f","nidorina","nidoqueen","nidoran-m","nidorino","nidoking","clefairy","clefable","vulpix","ninetales","jigglypuff","wigglytuff","zubat","golbat","oddish","gloom","vileplume","paras","parasect","venonat","venomoth","diglett","dugtrio","meowth","persian","psyduck","golduck","mankey","primeape","growlithe","arcanine","poliwag","poliwhirl","poliwrath","abra","kadabra","alakazam","machop","machoke","machamp","bellsprout","weepinbell","victreebel","tentacool","tentacruel","geodude","graveler","golem","ponyta","rapidash","slowpoke","slowbro","magnemite","magneton","farfetchd","doduo","dodrio","seel","dewgong","grimer","muk","shellder","cloyster","gastly","haunter","gengar","onix","drowzee","hypno","krabby","kingler","voltorb","electrode","exeggcute","exeggutor","cubone","marowak","hitmonlee","hitmonchan","lickitung","koffing","weezing","rhyhorn","rhydon","chansey","tangela","kangaskhan","horsea","seadra","goldeen","seaking","staryu","starmie","mr-mime","scyther","jynx","electabuzz","magmar","pinsir","tauros","magikarp","gyarados","lapras","ditto","eevee","vaporeon","jolteon","flareon","porygon","omanyte","omastar","kabuto","kabutops","aerodactyl","snorlax","articuno","zapdos","moltres","dratini","dragonair","dragonite","mewtwo","mew","chikorita","bayleef","meganium","cyndaquil","quilava","typhlosion","totodile","croconaw","feraligatr"];
+	
 	var battle = {
 		pokemon: [],
 		turn: 0,
@@ -289,6 +291,12 @@ window.onload = function() {
 		$("#message").text(string);
 	}
 
+	function setUpAutoComplete() {
+        $( "#searchPokemon" ).autocomplete({
+          source: pokemonList
+        });
+	}
+
 	function setDefaultPokemon() {
 		//default testing
 		var defaultMove = new Move("", 0);
@@ -303,6 +311,7 @@ window.onload = function() {
 
 	function init() {
 		radio.init();
+		setUpAutoComplete();
 		opening();
 		document.getElementById("submitSearch").addEventListener("click", submitPokemonSearch);
 	}

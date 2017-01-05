@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+
+<script
+	  src="https://code.jquery.com/jquery-3.1.1.js"
+	  integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+	  crossorigin="anonymous"></script>
+	<script>
+
+		var firstUrl = "http://pokeapi.co/api/v2/pokemon/";
+		var pokemonNames = [];
+		var count = 0;
+
+		addNames(firstUrl);
+
+
+		function addNames(pokeUrl) {
+			$.ajax({
+				url: pokeUrl,
+				success: function(data) {
+					var results = data.results;
+					for (var i = 0; i < results.length; i++) {
+						pokemonNames.push("\"" + results[i].name + "\"");
+						count++;
+					}
+					console.log("count: " + count);
+					if (count < 150) {
+						addNames(data.next);
+					} else {
+						console.log(pokemonNames);
+						document.write(pokemonNames);
+					}
+				},
+				async: false
+			});
+		}
+
+
+
+	</script>
+</body>
+</html>
